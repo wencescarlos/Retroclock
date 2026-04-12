@@ -21,6 +21,9 @@ jobs:
       with:
         python-version: '3.9'
 
+    - name: Install system dependencies
+      run: sudo apt-get update -qq && sudo apt-get install -y libusb-1.0-0-dev udev
+
     - name: Cache PlatformIO
       uses: actions/cache@v4
       with:

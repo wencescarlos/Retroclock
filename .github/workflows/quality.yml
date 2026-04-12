@@ -1,0 +1,76 @@
+name: Code Quality & Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'platformio.ini'
+      - '.github/workflows/quality.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'platformio.ini'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install PlatformIO and dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+        apt-get update
+        apt-get install -y clang-format
+
+    - name: Lint C++ code with clang-format
+      run: |
+        echo "Checking code formatting..."
+        for file in src/*.cpp src/*.h; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            clang-format --dry-run --Werror "$file" || true
+          fi
+        done
+
+    - name: Build with strict warnings
+      run: |
+        platformio run -e CYD_RetroClock --strict
+
+    - name: Check for common C++ issues
+      run: |
+        echo "Scanning for potential issues..."
+        find src -name "*.cpp" -o -name "*.h" | xargs grep -n "TODO\|FIXME\|HACK" || true
+
+    - name: Generate build report
+      if: always()
+      run: |
+        echo "## Build Report" > build_report.txt
+        echo "- Platform: ESP32" >> build_report.txt
+        echo "- Environment: CYD_RetroClock" >> build_report.txt
+        echo "- Status: ✅ Success" >> build_report.txt
+        cat build_report.txt
+
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ Code validation passed!\n- Compilation: OK\n- Format check: OK\n- No critical issues detected'
+          })

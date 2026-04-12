@@ -1,0 +1,49 @@
+name: Release Firmware
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+
+    - name: Build firmware
+      run: platformio run -e CYD_RetroClock
+
+    - name: Generate checksums
+      run: |
+        cd .pio/build/CYD_RetroClock/
+        sha256sum firmware.bin > firmware.bin.sha256
+        sha256sum bootloader.bin > bootloader.bin.sha256
+        sha256sum partitions.bin > partitions.bin.sha256
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          .pio/build/CYD_RetroClock/firmware.bin
+          .pio/build/CYD_RetroClock/bootloader.bin
+          .pio/build/CYD_RetroClock/partitions.bin
+          .pio/build/CYD_RetroClock/firmware.bin.sha256
+          .pio/build/CYD_RetroClock/bootloader.bin.sha256
+          .pio/build/CYD_RetroClock/partitions.bin.sha256
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -19,7 +19,7 @@
 #include <WiFi.h>
 #include <WiFiManager.h>
 #include <NTPClient.h>
-#include <WiFiUDP.h>
+#include <WiFiUdp.h>
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
 #include <Preferences.h>

@@ -1988,11 +1988,19 @@ void mostrarHorario() {
 
     bool salir = false;
     bool antP  = false;
+    bool esperandoSoltar = true;
     uint32_t tDeb = 0;
 
     while (!salir) {
         delay(20);
         Punto p = leerTouch();
+        if (esperandoSoltar) {
+            if (p.pulsado) continue;
+            esperandoSoltar = false;
+            antP = false;
+            tDeb = millis();
+            continue;
+        }
         if (!p.pulsado) { antP = false; continue; }
         if (antP) continue;
         if (millis() - tDeb < 180) continue;
@@ -2141,11 +2149,19 @@ void mostrarMenu() {
     dibujarMenu();
 
     bool salir = false, antP = false;
+    bool esperandoSoltar = true;
     uint32_t tDeb = 0;
 
     while (!salir) {
         delay(20);
         Punto p = leerTouch();
+        if (esperandoSoltar) {
+            if (p.pulsado) continue;
+            esperandoSoltar = false;
+            antP = false;
+            tDeb = millis();
+            continue;
+        }
         if (!p.pulsado) { antP = false; continue; }
         if (antP) continue;
         if (millis() - tDeb < 180) continue;
